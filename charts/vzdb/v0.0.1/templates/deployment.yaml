@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "vzdb.fullname" . }}
+  labels:
+{{ include "vzdb.labels" . | indent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "vzdb.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "vzdb.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      serviceAccount: {{ template "vzdb.serviceAccountName" . }}
+      containers:
+      {{- with .Values.vzdb }}
+        - name: {{ .name }}
+          image: "{{ .image }}:{{ .imageTag }}"
+      {{- end }}
+          ports:
+            - name: vzdbport
+              containerPort: 22235
+            - name: vzevtport
+              containerPort: 22136

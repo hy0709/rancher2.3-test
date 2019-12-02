@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-vzdb-service
+  namespace: oge
+  labels:
+    app: behind-db
+spec:
+  type: {{ .Values.service.vzdb.type }}
+  ports:
+    - name: vzdbport
+      port: {{ .Values.service.vzdb.port }}
+      targetPort: vzdbport
+      {{- if .Values.service.vzdb.nodePort }}
+      nodePort: {{ .Values.service.vzdb.nodePort }}
+      {{- end }}
+      # protocol: TCP
+  selector:
+    app.kubernetes.io/name: {{ include "vzdb.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }} 

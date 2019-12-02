@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "rtdb-vzdb.fullname" . }}
+  labels:
+{{ include "rtdb-vzdb.labels" . | indent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "rtdb-vzdb.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "rtdb-vzdb.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      serviceAccountName: {{ template "rtdb-vzdb.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.rtdb.vzdb.image }}:{{ .Values.rtdb.vzdb.imageTag }}"
+          ports:
+            - name: rtdb-vzdb-port
+              containerPort: 8040
+          env:
+          {{- with .Values.rtdb.env }}
+            - name: spring.application.name
+              value: {{ .name | quote }}
+            - name: kdm.rtdb.host
+              value: {{ .host | quote }}
+            - name: kdm.rtdb.port
+              value: {{ .port | quote }}
+            - name: kdm.rtdb.username
+              value: {{ .username | quote }}
+            - name: kdm.rtdb.password
+              value: {{ .password | quote }}
+            - name: kdm.rtdb.rule
+              value: {{ .rule | quote }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
